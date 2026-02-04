@@ -1,0 +1,37 @@
+{
+  "name": "ai-research-writing-skills",
+  "version": "1.0.0",
+  "description": "AI Research Assistant Skills Library for Claude Code and Claude Agent SDK",
+  "main": "index.js",
+  "bin": {
+    "ai-research-writing-skills": "./bin/install.js",
+    "css-oss-skills": "./bin/install.js"
+  },
+  "scripts": {
+    "postinstall": "node bin/install.js",
+    "install": "node bin/install.js"
+  },
+  "keywords": [
+    "ai",
+    "research",
+    "claude",
+    "skills",
+    "anthropic",
+    "manuscript",
+    "paper-writing",
+    "brainstorming"
+  ],
+  "author": "Tensionteng",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tensionteng/css-oss-skills.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Tensionteng/css-oss-skills/issues"
+  },
+  "homepage": "https://github.com/Tensionteng/css-oss-skills#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

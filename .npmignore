@@ -1,0 +1,9 @@
+# Don't ignore skill directories - they need to be installed
+# This file ensures npm packs all skill content
+
+# But ignore these
+node_modules/
+.git/
+.gitignore
+*.log
+.DS_Store

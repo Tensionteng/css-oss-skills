@@ -106,7 +106,11 @@ your-project/
 如果你安装了 Node.js：
 
 ```bash
-npx github:Tensionteng/css-oss-skills install
+# 全局安装（所有项目可用）
+npx github:Tensionteng/css-oss-skills
+
+# 或项目级安装（仅当前项目可用，可随代码提交）
+npx github:Tensionteng/css-oss-skills --project
 ```
 
 **适用**：Linux、macOS、Windows（跨平台）
@@ -153,13 +157,13 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Tensionteng/css-oss-sk
 ```bash
 # 1. 克隆
 git clone https://github.com/Tensionteng/css-oss-skills.git
-cd ai-research-writing-skills
+cd css-oss-skills
 
-# 2. 安装（使用项目内的 install.js）
-node install.js install
+# 2. 安装（使用项目内的 bin/install.js）
+node bin/install.js
 
 # 或项目级安装
-node install.js install --local
+node bin/install.js --project
 ```
 
 ## 验证安装
