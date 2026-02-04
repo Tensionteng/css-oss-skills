@@ -124,12 +124,71 @@ function installSkills(targetDir, installType) {
   if (installType === '全局') {
     log('   - 所有项目都可以使用这些 skills');
     log('   - 更新：重新运行 npx github:Tensionteng/css-oss-skills');
+    log('   - 卸载：npx github:Tensionteng/css-oss-skills uninstall');
   } else {
     log('   - 项目级 skills 可以和代码一起提交到 Git');
     log('   - 团队成员会自动使用相同版本');
     log('   - 不同项目可以使用不同版本的 skills');
   }
 
+  log('', 'reset');
+}
+
+function uninstallSkills(targetDir, uninstallType) {
+  log('', 'reset');
+  log(`🗑️  卸载类型: ${uninstallType}`, 'cyan');
+  log(`📍 目标位置: ${targetDir}`, 'cyan');
+  log('', 'reset');
+
+  if (!fs.existsSync(targetDir)) {
+    log(`⚠️  目录不存在: ${targetDir}`, 'yellow');
+    log('可能已经被卸载，或从未安装。', 'reset');
+    return;
+  }
+
+  targetDir = path.resolve(targetDir);
+
+  log('🗑️  开始卸载 skills...', 'cyan');
+  log('', 'reset');
+
+  let uninstalled = 0;
+  let notFound = 0;
+
+  for (const skill of SKILLS) {
+    const skillTarget = path.join(targetDir, skill);
+
+    if (fs.existsSync(skillTarget)) {
+      fs.rmSync(skillTarget, { recursive: true, force: true });
+      log(`  ✓ ${skill}`, 'green');
+      uninstalled++;
+    } else {
+      log(`  ⚠️  ${skill} (未安装)`, 'yellow');
+      notFound++;
+    }
+  }
+
+  log('', 'reset');
+  log(`✅ 卸载完成! 成功: ${uninstalled}, 未安装: ${notFound}`, 'green');
+  log('', 'reset');
+
+  if (uninstallType === '项目级') {
+    // For project-level, also try to remove the parent .agents directory if empty
+    const agentsDir = path.dirname(targetDir);
+    try {
+      const remaining = fs.readdirSync(agentsDir);
+      if (remaining.length === 0) {
+        fs.rmdirSync(agentsDir);
+        log(`📍 已清理空目录: ${agentsDir}`, 'yellow');
+      }
+    } catch (e) {
+      // Ignore errors
+    }
+  }
+
+  log('', 'reset');
+  log('💡 提示:', 'yellow');
+  log('   如需重新安装，运行：', 'reset');
+  log('   npx github:Tensionteng/css-oss-skills', 'cyan');
   log('', 'reset');
 }
 
@@ -194,46 +253,84 @@ function isInteractive() {
   return true;
 }
 
+function showHelp() {
+  log('', 'reset');
+  log('🔧 AI Research Writing Skills - 安装脚本', 'cyan');
+  log('=========================================', 'cyan');
+  log('', 'reset');
+  log('用法: npx github:Tensionteng/css-oss-skills [命令] [选项]', 'yellow');
+  log('', 'reset');
+  log('命令:', 'cyan');
+  log('  (无)          安装 skills');
+  log('  uninstall     卸载 skills');
+  log('', 'reset');
+  log('选项:', 'cyan');
+  log('  --global, -g    全局操作 (默认，所有项目可用)');
+  log('  --project, -p   项目级操作 (仅当前项目可用)');
+  log('  --help, -h      显示帮助信息');
+  log('', 'reset');
+  log('示例:', 'cyan');
+  log('  npx github:Tensionteng/css-oss-skills              # 安装（全局）');
+  log('  npx github:Tensionteng/css-oss-skills --project    # 安装（项目级）');
+  log('  npx github:Tensionteng/css-oss-skills uninstall    # 卸载（全局）');
+  log('  npx github:Tensionteng/css-oss-skills uninstall --project  # 卸载（项目级）');
+  log('', 'reset');
+}
+
 async function main() {
   try {
-    const hasArgs = process.argv.length > 2;
+    const args = process.argv.slice(2);
+    const hasArgs = args.length > 0;
     const interactive = isInteractive();
 
+    // Check for help
+    if (args.includes('--help') || args.includes('-h')) {
+      showHelp();
+      return;
+    }
+
+    // Check for uninstall command
+    const isUninstall = args.includes('uninstall') || args.includes('remove');
+    
+    // Filter out command to get flags
+    const flags = args.filter(arg => arg !== 'uninstall' && arg !== 'remove');
+    const globalFlag = flags.includes('--global') || flags.includes('-g');
+    const projectFlag = flags.includes('--project') || flags.includes('-p');
+
     let targetDir;
-    let installType;
+    let operationType;
 
-    if (hasArgs) {
-      // Parse command line arguments
-      const args = process.argv.slice(2);
-      const globalFlag = args.includes('--global') || args.includes('-g');
-      const projectFlag = args.includes('--project') || args.includes('-p');
-
+    if (hasArgs && !isUninstall) {
+      // Install with flags
       if (globalFlag) {
         targetDir = getGlobalDir();
-        installType = '全局';
+        operationType = '全局';
       } else if (projectFlag) {
         targetDir = path.join(process.cwd(), '.agents', 'skills');
-        installType = '项目级';
+        operationType = '项目级';
       } else {
-        // Has args but no recognized flags - show help and default to global
-        log('', 'reset');
-        log('🔧 AI Research Writing Skills - 安装脚本', 'cyan');
-        log('=========================================', 'cyan');
-        log('', 'reset');
-        log('用法: npx github:Tensionteng/css-oss-skills [选项]', 'yellow');
-        log('', 'reset');
-        log('选项:', 'cyan');
-        log('  --global, -g    全局安装 (默认，所有项目可用)');
-        log('  --project, -p   项目级安装 (仅当前项目可用)');
-        log('', 'reset');
+        // Unknown args - show help and default
+        showHelp();
         log('非交互式环境自动使用全局安装', 'yellow');
         log('', 'reset');
         
         targetDir = getGlobalDir();
-        installType = '全局';
+        operationType = '全局';
       }
+    } else if (isUninstall) {
+      // Uninstall mode
+      if (projectFlag) {
+        targetDir = path.join(process.cwd(), '.agents', 'skills');
+        operationType = '项目级';
+      } else {
+        // Default to global for uninstall
+        targetDir = getGlobalDir();
+        operationType = '全局';
+      }
+      uninstallSkills(targetDir, operationType);
+      return;
     } else if (!interactive) {
-      // Non-interactive mode (npx, CI, pipe) - default to global
+      // Non-interactive install mode - default to global
       log('', 'reset');
       log('🔧 AI Research Writing Skills - 安装脚本', 'cyan');
       log('=========================================', 'cyan');
@@ -242,17 +339,17 @@ async function main() {
       log('', 'reset');
       
       targetDir = getGlobalDir();
-      installType = '全局';
+      operationType = '全局';
     } else {
-      // Interactive mode
+      // Interactive install mode
       const result = await promptInstallType();
       targetDir = result.targetDir;
-      installType = result.installType;
+      operationType = result.installType;
     }
 
-    installSkills(targetDir, installType);
+    installSkills(targetDir, operationType);
   } catch (error) {
-    log(`❌ 安装失败: ${error.message}`, 'red');
+    log(`❌ 操作失败: ${error.message}`, 'red');
     process.exit(1);
   }
 }

@@ -183,7 +183,19 @@ ls .agents/skills/                 # 项目级
 
 ## 卸载
 
-### 全局安装卸载
+### 方式一：使用 npx 卸载（推荐）
+
+```bash
+# 卸载全局安装的 skills
+npx github:Tensionteng/css-oss-skills uninstall
+
+# 卸载项目级安装的 skills
+npx github:Tensionteng/css-oss-skills uninstall --project
+```
+
+### 方式二：手动删除
+
+**全局安装卸载：**
 
 ```bash
 # Linux / macOS
@@ -201,7 +213,7 @@ Remove-Item -Recurse -Force "$env:USERPROFILE\.config\agents\skills\manuscript-w
 Remove-Item -Recurse -Force "$env:USERPROFILE\.config\agents\skills\peer-review"
 ```
 
-### 项目级安装卸载
+**项目级安装卸载：**
 
 ```bash
 # 直接删除项目中的 .agents 目录
