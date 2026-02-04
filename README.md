@@ -181,6 +181,43 @@ ls .agents/skills/                 # 项目级
 # 应该看到：research-brainstorming、research-execution、pdf-reader、manuscript-writing、peer-review
 ```
 
+## 卸载
+
+### 全局安装卸载
+
+```bash
+# Linux / macOS
+rm -rf ~/.config/agents/skills/research-brainstorming
+rm -rf ~/.config/agents/skills/research-execution
+rm -rf ~/.config/agents/skills/pdf-reader
+rm -rf ~/.config/agents/skills/manuscript-writing
+rm -rf ~/.config/agents/skills/peer-review
+
+# Windows (PowerShell)
+Remove-Item -Recurse -Force "$env:USERPROFILE\.config\agents\skills\research-brainstorming"
+Remove-Item -Recurse -Force "$env:USERPROFILE\.config\agents\skills\research-execution"
+Remove-Item -Recurse -Force "$env:USERPROFILE\.config\agents\skills\pdf-reader"
+Remove-Item -Recurse -Force "$env:USERPROFILE\.config\agents\skills\manuscript-writing"
+Remove-Item -Recurse -Force "$env:USERPROFILE\.config\agents\skills\peer-review"
+```
+
+### 项目级安装卸载
+
+```bash
+# 直接删除项目中的 .agents 目录
+rm -rf .agents/
+```
+
+### 一键卸载脚本
+
+```bash
+# Linux / macOS - 删除所有全局 skills
+rm -rf ~/.config/agents/skills/*
+
+# Windows - 删除所有全局 skills
+Remove-Item -Recurse -Force "$env:USERPROFILE\.config\agents\skills\*"
+```
+
 ## 使用
 
 ```bash
