@@ -1,20 +1,19 @@
 #!/bin/bash
 # AI Research Writing Skills - Installation Script
-# Supports both global and project-level installation
+# Interactive installation with global/project-level choice
 
 set -e
 
 REPO_URL="https://github.com/Tensionteng/css-oss-skills.git"
 SKILLS=("research-brainstorming" "research-execution" "pdf-reader" "manuscript-writing" "peer-review")
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-echo -e "${CYAN}🔧 AI Research Writing Skills - 安装脚本${NC}"
+echo -e "${CYAN}🔧 AI Research Writing Skills - 安装${NC}"
 echo -e "${CYAN}=========================================${NC}"
 echo ""
 
@@ -24,99 +23,37 @@ if [ -z "$HOME_DIR" ]; then
     HOME_DIR="$(getent passwd "$USER" | cut -d: -f6)"
 fi
 
-# Determine available installation locations
 GLOBAL_DIR="$HOME_DIR/.config/agents/skills"
 PROJECT_DIR="./.agents/skills"
 
-# Parse command line arguments
-INSTALL_MODE=""
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --global|-g)
-            INSTALL_MODE="global"
-            shift
-            ;;
-        --project|-p)
-            INSTALL_MODE="project"
-            shift
-            ;;
-        --help|-h)
-            echo "用法: $0 [选项]"
-            echo ""
-            echo "选项:"
-            echo "  --global, -g    全局安装 (所有项目可用)"
-            echo "  --project, -p   项目级安装 (仅当前项目可用)"
-            echo "  --help, -h      显示此帮助信息"
-            echo ""
-            echo "不带参数时，交互式选择安装方式"
-            exit 0
-            ;;
-        *)
-            echo -e "${YELLOW}未知选项: $1${NC}"
-            shift
-            ;;
-    esac
-done
+# Interactive selection
+echo -e "${YELLOW}请选择安装方式：${NC}"
+echo ""
+echo "  1) 全局安装 - 所有项目可用"
+echo "     $GLOBAL_DIR"
+echo ""
+echo "  2) 项目级安装 - 仅当前项目可用"
+echo "     $PROJECT_DIR"
+echo ""
 
-# Check if running in non-interactive mode (pipe, CI, etc.)
-is_interactive() {
-    # Check if stdin is a terminal
-    if [ ! -t 0 ]; then
-        return 1
-    fi
-    # Check for CI environment
-    if [ -n "$CI" ] || [ -n "$CONTINUOUS_INTEGRATION" ]; then
-        return 1
-    fi
-    return 0
-}
+read -p "请输入选项 (1 或 2，默认: 1): " choice
+choice=${choice:-1}
 
-# Determine installation mode
-if [ -n "$INSTALL_MODE" ]; then
-    # Command line argument provided
-    if [ "$INSTALL_MODE" = "global" ]; then
+case "$choice" in
+    1)
         TARGET_DIR="$GLOBAL_DIR"
         INSTALL_TYPE="全局"
-    else
+        ;;
+    2)
         TARGET_DIR="$PROJECT_DIR"
         INSTALL_TYPE="项目级"
-    fi
-elif ! is_interactive; then
-    # Non-interactive mode - default to global
-    echo -e "${YELLOW}检测到非交互式环境，使用默认全局安装${NC}"
-    TARGET_DIR="$GLOBAL_DIR"
-    INSTALL_TYPE="全局"
-else
-    # Interactive selection
-    echo -e "${YELLOW}请选择安装方式：${NC}"
-    echo ""
-    echo "  1) 全局安装 (所有项目可用)"
-    echo "     位置: $GLOBAL_DIR"
-    echo ""
-    echo "  2) 项目级安装 (仅当前项目可用，可随代码提交)"
-    echo "     位置: $PROJECT_DIR"
-    echo ""
-
-    # Default to option 1 if no input
-    read -p "请输入选项 (1 或 2，默认: 1): " choice
-    choice=${choice:-1}
-
-    case "$choice" in
-        1)
-            TARGET_DIR="$GLOBAL_DIR"
-            INSTALL_TYPE="全局"
-            ;;
-        2)
-            TARGET_DIR="$PROJECT_DIR"
-            INSTALL_TYPE="项目级"
-            ;;
-        *)
-            echo -e "${RED}❌ 无效选项，使用默认全局安装${NC}"
-            TARGET_DIR="$GLOBAL_DIR"
-            INSTALL_TYPE="全局"
-            ;;
-    esac
-fi
+        ;;
+    *)
+        echo -e "${YELLOW}无效选项，使用默认全局安装${NC}"
+        TARGET_DIR="$GLOBAL_DIR"
+        INSTALL_TYPE="全局"
+        ;;
+esac
 
 echo ""
 echo -e "${CYAN}安装类型: $INSTALL_TYPE${NC}"
@@ -125,43 +62,40 @@ echo ""
 
 # Create target directory
 mkdir -p "$TARGET_DIR"
-
-# Convert to absolute path
 cd "$TARGET_DIR" && TARGET_DIR="$(pwd)"
 
 echo -e "${YELLOW}📥 开始下载...${NC}"
 
-# Create temporary directory for download
+# Create temporary directory
 TEMP_DIR=$(mktemp -d)
 trap "rm -rf $TEMP_DIR" EXIT
 
-# Clone to temporary directory
+# Clone
 echo "  正在克隆仓库..."
-git clone --depth 1 "$REPO_URL" "$TEMP_DIR/ai-research-writing-skills" 2>/dev/null || {
+if ! git clone --depth 1 "$REPO_URL" "$TEMP_DIR/css-oss-skills" 2>/dev/null; then
     echo -e "${RED}❌ 下载失败，请检查网络连接${NC}"
     exit 1
-}
+fi
 
 echo -e "${GREEN}  ✓ 下载完成${NC}"
 echo ""
 
-# Check if old version exists and show warning
+# Check for existing installation
 if [ -d "$TARGET_DIR/research-brainstorming" ] || [ -d "$TARGET_DIR/manuscript-writing" ]; then
     echo -e "${YELLOW}⚠️  检测到已存在的 skills，将自动覆盖更新${NC}"
     echo ""
 fi
 
-# Install/Update skills
-echo -e "${CYAN}📦 安装 skills...${NC}"
-cd "$TEMP_DIR/ai-research-writing-skills"
+# Install
+echo -e "${CYAN}📦 开始安装 skills...${NC}"
+echo ""
+cd "$TEMP_DIR/css-oss-skills"
 
 for skill in "${SKILLS[@]}"; do
     if [ -d "$skill" ]; then
-        # Remove old version if exists (safe because we already downloaded)
         if [ -d "$TARGET_DIR/$skill" ]; then
             rm -rf "$TARGET_DIR/$skill"
         fi
-        # Copy new version
         cp -r "$skill" "$TARGET_DIR/"
         echo -e "  ${GREEN}✓${NC} $skill"
     else
@@ -175,21 +109,9 @@ echo ""
 echo -e "${YELLOW}📍 Skills 位置: $TARGET_DIR${NC}"
 echo ""
 echo -e "${CYAN}🚀 使用方法:${NC}"
-
-if [ "$INSTALL_TYPE" = "项目级" ]; then
-    echo "   cd $(dirname $(dirname "$TARGET_DIR"))"
-fi
-
-echo "   /skill:research-brainstorming"
-echo "   /skill:manuscript-writing"
+echo "   /skill:research-brainstorming    头脑风暴"
+echo "   /skill:research-execution        实验执行"
+echo "   /skill:manuscript-writing        论文写作"
+echo "   /skill:peer-review               审稿反馈"
+echo "   /skill:pdf-reader                PDF 阅读"
 echo ""
-echo -e "${YELLOW}💡 提示:${NC}"
-
-if [ "$INSTALL_TYPE" = "全局" ]; then
-    echo "   - 所有项目都可以使用这些 skills"
-    echo "   - 更新：重新运行此脚本即可"
-else
-    echo "   - 项目级 skills 可以和代码一起提交到 Git"
-    echo "   - 团队成员会自动使用相同版本"
-    echo "   - 不同项目可以使用不同版本的 skills"
-fi

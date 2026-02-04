@@ -2,12 +2,10 @@
 
 /**
  * AI Research Writing Skills - NPX Installation Script
- * Supports both global and project-level installation
  */
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 const readline = require('readline');
 
 const SKILLS = [
@@ -18,7 +16,6 @@ const SKILLS = [
   'peer-review'
 ];
 
-// Colors for terminal output
 const colors = {
   reset: '\x1b[0m',
   red: '\x1b[0;31m',
@@ -32,8 +29,6 @@ function log(message, color = 'reset') {
 }
 
 function getSourceDir() {
-  // When running via npx, we're inside the cloned repo
-  // The source skills are in the same directory as this script's parent
   return path.dirname(__dirname);
 }
 
@@ -42,17 +37,18 @@ function getGlobalDir() {
   return path.join(home, '.config', 'agents', 'skills');
 }
 
+function getProjectDir() {
+  return path.join(process.cwd(), '.agents', 'skills');
+}
+
 function copyDir(src, dest) {
   if (!fs.existsSync(dest)) {
     fs.mkdirSync(dest, { recursive: true });
   }
-
   const entries = fs.readdirSync(src, { withFileTypes: true });
-
   for (const entry of entries) {
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
-
     if (entry.isDirectory()) {
       copyDir(srcPath, destPath);
     } else {
@@ -61,7 +57,57 @@ function copyDir(src, dest) {
   }
 }
 
-function installSkills(targetDir, installType) {
+function prompt(question) {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
+
+async function installInteractive() {
+  const globalDir = getGlobalDir();
+  const projectDir = getProjectDir();
+
+  log('', 'reset');
+  log('🔧 AI Research Writing Skills - 安装', 'cyan');
+  log('=========================================', 'cyan');
+  log('', 'reset');
+  log('请选择安装方式：', 'yellow');
+  log('', 'reset');
+  log('  1) 全局安装 - 所有项目可用');
+  log(`     ${globalDir}`);
+  log('', 'reset');
+  log('  2) 项目级安装 - 仅当前项目可用');
+  log(`     ${projectDir}`);
+  log('', 'reset');
+
+  const choice = await prompt('请输入选项 (1 或 2，默认: 1): ') || '1';
+
+  let targetDir;
+  let installType;
+
+  if (choice === '1') {
+    targetDir = globalDir;
+    installType = '全局';
+  } else if (choice === '2') {
+    targetDir = projectDir;
+    installType = '项目级';
+  } else {
+    log('无效选项，使用默认全局安装', 'yellow');
+    targetDir = globalDir;
+    installType = '全局';
+  }
+
+  await performInstall(targetDir, installType);
+}
+
+async function performInstall(targetDir, installType) {
   const sourceDir = getSourceDir();
 
   log('', 'reset');
@@ -69,12 +115,9 @@ function installSkills(targetDir, installType) {
   log(`📍 目标位置: ${targetDir}`, 'cyan');
   log('', 'reset');
 
-  // Create target directory
   if (!fs.existsSync(targetDir)) {
     fs.mkdirSync(targetDir, { recursive: true });
   }
-
-  // Convert to absolute path
   targetDir = path.resolve(targetDir);
 
   log('📦 开始安装 skills...', 'cyan');
@@ -88,12 +131,9 @@ function installSkills(targetDir, installType) {
     const skillTarget = path.join(targetDir, skill);
 
     if (fs.existsSync(skillSource)) {
-      // Remove old version if exists
       if (fs.existsSync(skillTarget)) {
         fs.rmSync(skillTarget, { recursive: true, force: true });
       }
-
-      // Copy new version
       copyDir(skillSource, skillTarget);
       log(`  ✓ ${skill}`, 'green');
       installed++;
@@ -104,252 +144,153 @@ function installSkills(targetDir, installType) {
   }
 
   log('', 'reset');
-  log(`✅ 安装完成! 成功: ${installed}, 失败: ${failed}`, 'green');
-  log('', 'reset');
-  log(`📍 Skills 位置: ${targetDir}`, 'yellow');
+  log(`✅ 安装完成! 成功: ${installed}`, 'green');
   log('', 'reset');
   log('🚀 使用方法:', 'cyan');
-
-  if (installType === '项目级') {
-    const parentDir = path.dirname(path.dirname(targetDir));
-    log(`   cd ${parentDir}`);
-  }
-
-  log('   /skill:research-brainstorming');
-  log('   /skill:manuscript-writing');
-  log('   /skill:peer-review');
-  log('', 'reset');
-  log('💡 提示:', 'yellow');
-
-  if (installType === '全局') {
-    log('   - 所有项目都可以使用这些 skills');
-    log('   - 更新：重新运行 npx github:Tensionteng/css-oss-skills');
-    log('   - 卸载：npx github:Tensionteng/css-oss-skills uninstall');
-  } else {
-    log('   - 项目级 skills 可以和代码一起提交到 Git');
-    log('   - 团队成员会自动使用相同版本');
-    log('   - 不同项目可以使用不同版本的 skills');
-  }
-
+  log('   /skill:research-brainstorming    头脑风暴');
+  log('   /skill:research-execution        实验执行');
+  log('   /skill:manuscript-writing        论文写作');
+  log('   /skill:peer-review               审稿反馈');
+  log('   /skill:pdf-reader                PDF 阅读');
   log('', 'reset');
 }
 
-function uninstallSkills(targetDir, uninstallType) {
+async function uninstallInteractive() {
+  const globalDir = getGlobalDir();
+  const projectDir = getProjectDir();
+
+  // Check what exists
+  const globalExists = fs.existsSync(globalDir);
+  const projectExists = fs.existsSync(projectDir);
+
   log('', 'reset');
-  log(`🗑️  卸载类型: ${uninstallType}`, 'cyan');
-  log(`📍 目标位置: ${targetDir}`, 'cyan');
+  log('🗑️  AI Research Writing Skills - 卸载', 'cyan');
+  log('=========================================', 'cyan');
   log('', 'reset');
 
+  if (!globalExists && !projectExists) {
+    log('⚠️  未检测到已安装的 skills', 'yellow');
+    return;
+  }
+
+  log('即将删除以下内容：', 'yellow');
+  log('', 'reset');
+
+  if (globalExists) {
+    log(`  📁 全局: ${globalDir}`);
+  }
+  if (projectExists) {
+    log(`  📁 项目: ${projectDir}`);
+  }
+
+  log('', 'reset');
+  const confirm = await prompt('确认删除? (yes/no): ');
+
+  if (confirm.toLowerCase() !== 'yes') {
+    log('已取消卸载', 'yellow');
+    return;
+  }
+
+  // Uninstall global
+  if (globalExists) {
+    log('', 'reset');
+    log('🗑️  正在卸载全局 skills...', 'cyan');
+    await performUninstall(globalDir, '全局');
+    // Try to remove parent directories if empty
+    try {
+      const agentsDir = path.dirname(globalDir);
+      const configDir = path.dirname(agentsDir);
+      if (fs.existsSync(globalDir) && fs.readdirSync(globalDir).length === 0) {
+        fs.rmdirSync(globalDir);
+        if (fs.existsSync(agentsDir) && fs.readdirSync(agentsDir).length === 0) {
+          fs.rmdirSync(agentsDir);
+          if (fs.existsSync(configDir) && fs.readdirSync(configDir).length === 0) {
+            fs.rmdirSync(configDir);
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore cleanup errors
+    }
+  }
+
+  // Uninstall project
+  if (projectExists) {
+    log('', 'reset');
+    log('🗑️  正在卸载项目级 skills...', 'cyan');
+    await performUninstall(projectDir, '项目级');
+    // Try to remove parent directories if empty
+    try {
+      const agentsDir = path.dirname(projectDir);
+      if (fs.existsSync(projectDir) && fs.readdirSync(projectDir).length === 0) {
+        fs.rmdirSync(projectDir);
+        if (fs.existsSync(agentsDir) && fs.readdirSync(agentsDir).length === 0) {
+          fs.rmdirSync(agentsDir);
+        }
+      }
+    } catch (e) {
+      // Ignore cleanup errors
+    }
+  }
+
+  log('', 'reset');
+  log('✅ 卸载完成', 'green');
+  log('', 'reset');
+}
+
+async function performUninstall(targetDir, uninstallType) {
   if (!fs.existsSync(targetDir)) {
-    log(`⚠️  目录不存在: ${targetDir}`, 'yellow');
-    log('可能已经被卸载，或从未安装。', 'reset');
+    log(`  ⚠️  目录不存在: ${targetDir}`, 'yellow');
     return;
   }
 
   targetDir = path.resolve(targetDir);
-
-  log('🗑️  开始卸载 skills...', 'cyan');
-  log('', 'reset');
-
   let uninstalled = 0;
-  let notFound = 0;
 
   for (const skill of SKILLS) {
     const skillTarget = path.join(targetDir, skill);
-
     if (fs.existsSync(skillTarget)) {
       fs.rmSync(skillTarget, { recursive: true, force: true });
       log(`  ✓ ${skill}`, 'green');
       uninstalled++;
-    } else {
-      log(`  ⚠️  ${skill} (未安装)`, 'yellow');
-      notFound++;
     }
   }
 
-  log('', 'reset');
-  log(`✅ 卸载完成! 成功: ${uninstalled}, 未安装: ${notFound}`, 'green');
-  log('', 'reset');
-
-  if (uninstallType === '项目级') {
-    // For project-level, also try to remove the parent .agents directory if empty
-    const agentsDir = path.dirname(targetDir);
-    try {
-      const remaining = fs.readdirSync(agentsDir);
-      if (remaining.length === 0) {
-        fs.rmdirSync(agentsDir);
-        log(`📍 已清理空目录: ${agentsDir}`, 'yellow');
-      }
-    } catch (e) {
-      // Ignore errors
-    }
+  if (uninstalled === 0) {
+    log('  未找到已安装的 skills', 'yellow');
   }
-
-  log('', 'reset');
-  log('💡 提示:', 'yellow');
-  log('   如需重新安装，运行：', 'reset');
-  log('   npx github:Tensionteng/css-oss-skills', 'cyan');
-  log('', 'reset');
-}
-
-function promptInstallType() {
-  return new Promise((resolve) => {
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
-
-    const globalDir = getGlobalDir();
-    const projectDir = path.join(process.cwd(), '.agents', 'skills');
-
-    log('', 'reset');
-    log('🔧 AI Research Writing Skills - 安装脚本', 'cyan');
-    log('=========================================', 'cyan');
-    log('', 'reset');
-    log('请选择安装方式：', 'yellow');
-    log('', 'reset');
-    log('  1) 全局安装 (所有项目可用)');
-    log(`     位置: ${globalDir}`);
-    log('', 'reset');
-    log('  2) 项目级安装 (仅当前项目可用，可随代码提交)');
-    log(`     位置: ${projectDir}`);
-    log('', 'reset');
-
-    rl.question('请输入选项 (1 或 2，默认: 1): ', (answer) => {
-      rl.close();
-      const choice = answer.trim() || '1';
-
-      switch (choice) {
-        case '1':
-          resolve({ targetDir: globalDir, installType: '全局' });
-          break;
-        case '2':
-          resolve({ targetDir: projectDir, installType: '项目级' });
-          break;
-        default:
-          log('无效选项，使用默认全局安装', 'yellow');
-          resolve({ targetDir: globalDir, installType: '全局' });
-      }
-    });
-  });
-}
-
-function isInteractive() {
-  // Check if stdin is a TTY (terminal)
-  if (!process.stdin.isTTY) {
-    return false;
-  }
-  // Check for CI environments
-  if (process.env.CI || process.env.CONTINUOUS_INTEGRATION) {
-    return false;
-  }
-  // Check if running via npx/npm install (npm sets these)
-  if (process.env.npm_config_global || process.env.INIT_CWD) {
-    // We're being run as an npm script, check if stdin is still available
-    if (!process.stdin.isTTY) {
-      return false;
-    }
-  }
-  return true;
 }
 
 function showHelp() {
   log('', 'reset');
-  log('🔧 AI Research Writing Skills - 安装脚本', 'cyan');
+  log('🔧 AI Research Writing Skills', 'cyan');
   log('=========================================', 'cyan');
   log('', 'reset');
-  log('用法: npx github:Tensionteng/css-oss-skills [命令] [选项]', 'yellow');
+  log('用法:', 'yellow');
+  log('  npx github:Tensionteng/css-oss-skills         安装 (交互式选择)');
+  log('  npx github:Tensionteng/css-oss-skills uninstall  卸载 (删除全局+项目级)');
   log('', 'reset');
-  log('命令:', 'cyan');
-  log('  (无)          安装 skills');
-  log('  uninstall     卸载 skills');
-  log('', 'reset');
-  log('选项:', 'cyan');
-  log('  --global, -g    全局操作 (默认，所有项目可用)');
-  log('  --project, -p   项目级操作 (仅当前项目可用)');
-  log('  --help, -h      显示帮助信息');
-  log('', 'reset');
-  log('示例:', 'cyan');
-  log('  npx github:Tensionteng/css-oss-skills              # 安装（全局）');
-  log('  npx github:Tensionteng/css-oss-skills --project    # 安装（项目级）');
-  log('  npx github:Tensionteng/css-oss-skills uninstall    # 卸载（全局）');
-  log('  npx github:Tensionteng/css-oss-skills uninstall --project  # 卸载（项目级）');
+  log('注意:', 'yellow');
+  log('  首次运行 npx 时会提示 "Ok to proceed?" 这是 npm 的安全确认，输入 y 即可。');
   log('', 'reset');
 }
 
 async function main() {
   try {
     const args = process.argv.slice(2);
-    const hasArgs = args.length > 0;
-    const interactive = isInteractive();
 
-    // Check for help
     if (args.includes('--help') || args.includes('-h')) {
       showHelp();
       return;
     }
 
-    // Check for uninstall command
-    const isUninstall = args.includes('uninstall') || args.includes('remove');
-    
-    // Filter out command to get flags
-    const flags = args.filter(arg => arg !== 'uninstall' && arg !== 'remove');
-    const globalFlag = flags.includes('--global') || flags.includes('-g');
-    const projectFlag = flags.includes('--project') || flags.includes('-p');
-
-    let targetDir;
-    let operationType;
-
-    if (hasArgs && !isUninstall) {
-      // Install with flags
-      if (globalFlag) {
-        targetDir = getGlobalDir();
-        operationType = '全局';
-      } else if (projectFlag) {
-        targetDir = path.join(process.cwd(), '.agents', 'skills');
-        operationType = '项目级';
-      } else {
-        // Unknown args - show help and default
-        showHelp();
-        log('非交互式环境自动使用全局安装', 'yellow');
-        log('', 'reset');
-        
-        targetDir = getGlobalDir();
-        operationType = '全局';
-      }
-    } else if (isUninstall) {
-      // Uninstall mode
-      if (projectFlag) {
-        targetDir = path.join(process.cwd(), '.agents', 'skills');
-        operationType = '项目级';
-      } else {
-        // Default to global for uninstall
-        targetDir = getGlobalDir();
-        operationType = '全局';
-      }
-      uninstallSkills(targetDir, operationType);
-      return;
-    } else if (!interactive) {
-      // Non-interactive install mode - default to global
-      log('', 'reset');
-      log('🔧 AI Research Writing Skills - 安装脚本', 'cyan');
-      log('=========================================', 'cyan');
-      log('', 'reset');
-      log('检测到非交互式环境，使用默认全局安装', 'yellow');
-      log('', 'reset');
-      
-      targetDir = getGlobalDir();
-      operationType = '全局';
+    if (args.includes('uninstall') || args.includes('remove')) {
+      await uninstallInteractive();
     } else {
-      // Interactive install mode
-      const result = await promptInstallType();
-      targetDir = result.targetDir;
-      operationType = result.installType;
+      await installInteractive();
     }
-
-    installSkills(targetDir, operationType);
   } catch (error) {
-    log(`❌ 操作失败: ${error.message}`, 'red');
+    log(`❌ 错误: ${error.message}`, 'red');
     process.exit(1);
   }
 }

@@ -99,135 +99,59 @@ your-project/
 
 ---
 
-## 安装方式
+## 安装
 
-### 方式一：npx（推荐）
+所有安装方式都会**交互式询问**你选择全局安装（所有项目可用）或项目级安装（仅当前项目可用）。
 
-如果你安装了 Node.js：
+### 方式一：npx（需 Node.js）
 
 ```bash
-# 全局安装（所有项目可用）
 npx github:Tensionteng/css-oss-skills
-
-# 或项目级安装（仅当前项目可用，可随代码提交）
-npx github:Tensionteng/css-oss-skills --project
 ```
-
-**适用**：Linux、macOS、Windows（跨平台）
-
-**安装位置**：
-- Linux/macOS: `~/.config/agents/skills/`
-- Windows: `%USERPROFILE%\.config\agents\skills\`
-
-**更新**：重新运行 install 即可
 
 ---
 
-### 方式二：脚本安装（无 npx）
-
-如果没有 npx，使用脚本安装。
+### 方式二：curl/wget（无需 Node.js）
 
 **Linux / macOS：**
 
 ```bash
-# 全局安装（推荐，所有项目可用）
-curl -fsSL https://raw.githubusercontent.com/Tensionteng/css-oss-skills/main/install-local.sh | bash -s -- --global
+curl -fsSL https://raw.githubusercontent.com/Tensionteng/css-oss-skills/main/install-local.sh | bash
 
-# 项目级安装
-bash install-local.sh --project
+# 如果没有curl，可以用wget：
+wget -qO- https://raw.githubusercontent.com/Tensionteng/css-oss-skills/main/install-local.sh | bash
 ```
 
-或下载后运行：
-```bash
-wget https://raw.githubusercontent.com/Tensionteng/css-oss-skills/main/install-local.sh
-bash install-local.sh --global   # 全局安装
-bash install-local.sh --project  # 项目级安装
-```
-
-**Windows：**
+**Windows（PowerShell）：**
 
 ```powershell
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Tensionteng/css-oss-skills/main/install-local.ps1" -OutFile "install-local.ps1"
-.\install-local.ps1
+iwr -useb https://raw.githubusercontent.com/Tensionteng/css-oss-skills/main/install-local.ps1 | iex
 ```
-
-脚本会交互式询问安装位置（全局或项目级），并自动处理符号链接或复制。
 
 ---
 
-### 方式三：手动安装（高级）
-
-如果需要修改代码或贡献：
+### 方式三：手动克隆
 
 ```bash
-# 1. 克隆
 git clone https://github.com/Tensionteng/css-oss-skills.git
 cd css-oss-skills
-
-# 2. 安装（使用项目内的 bin/install.js）
 node bin/install.js
-
-# 或项目级安装
-node bin/install.js --project
-```
-
-## 验证安装
-
-```bash
-# 检查 skills 目录
-ls ~/.config/agents/skills/        # Linux/macOS 全局
-ls .agents/skills/                 # 项目级
-
-# 应该看到：research-brainstorming、research-execution、pdf-reader、manuscript-writing、peer-review
 ```
 
 ## 卸载
 
-### 方式一：使用 npx 卸载（推荐）
-
 ```bash
-# 卸载全局安装的 skills
 npx github:Tensionteng/css-oss-skills uninstall
-
-# 卸载项目级安装的 skills
-npx github:Tensionteng/css-oss-skills uninstall --project
 ```
 
-### 方式二：手动删除
 
-**全局安装卸载：**
-
+**手动删除**（如需单独删除）：
 ```bash
-# Linux / macOS
-rm -rf ~/.config/agents/skills/research-brainstorming
-rm -rf ~/.config/agents/skills/research-execution
-rm -rf ~/.config/agents/skills/pdf-reader
-rm -rf ~/.config/agents/skills/manuscript-writing
-rm -rf ~/.config/agents/skills/peer-review
-
-# Windows (PowerShell)
-Remove-Item -Recurse -Force "$env:USERPROFILE\.config\agents\skills\research-brainstorming"
-Remove-Item -Recurse -Force "$env:USERPROFILE\.config\agents\skills\research-execution"
-Remove-Item -Recurse -Force "$env:USERPROFILE\.config\agents\skills\pdf-reader"
-Remove-Item -Recurse -Force "$env:USERPROFILE\.config\agents\skills\manuscript-writing"
-Remove-Item -Recurse -Force "$env:USERPROFILE\.config\agents\skills\peer-review"
-```
-
-**项目级安装卸载：**
-
-```bash
-# 直接删除项目中的 .agents 目录
-rm -rf .agents/
-```
-
-### 一键卸载脚本
-
-```bash
-# Linux / macOS - 删除所有全局 skills
+# 全局安装位置
 rm -rf ~/.config/agents/skills/*
 
-# Windows - 删除所有全局 skills
-Remove-Item -Recurse -Force "$env:USERPROFILE\.config\agents\skills\*"
+# 项目级安装位置  
+rm -rf .agents/
 ```
 
 ## 使用
