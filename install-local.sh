@@ -26,18 +26,39 @@ fi
 GLOBAL_DIR="$HOME_DIR/.config/agents/skills"
 PROJECT_DIR="./.agents/skills"
 
-# Interactive selection
-echo -e "${YELLOW}请选择安装方式：${NC}"
-echo ""
-echo "  1) 全局安装 - 所有项目可用"
-echo "     $GLOBAL_DIR"
-echo ""
-echo "  2) 项目级安装 - 仅当前项目可用"
-echo "     $PROJECT_DIR"
-echo ""
+# Check if running in interactive mode
+if [ -t 0 ] && [ -t 1 ]; then
+    # Interactive mode - both stdin and stdout are terminals
+    INTERACTIVE=1
+else
+    INTERACTIVE=0
+fi
 
-read -p "请输入选项 (1 或 2，默认: 1): " choice
-choice=${choice:-1}
+if [ $INTERACTIVE -eq 1 ]; then
+    # Interactive selection
+    echo -e "${YELLOW}请选择安装方式：${NC}"
+    echo ""
+    echo "  1) 全局安装 - 所有项目可用"
+    echo "     $GLOBAL_DIR"
+    echo ""
+    echo "  2) 项目级安装 - 仅当前项目可用"
+    echo "     $PROJECT_DIR"
+    echo ""
+    read -p "请输入选项 (1 或 2，默认: 1): " choice
+    choice=${choice:-1}
+else
+    # Non-interactive mode - show info and use default
+    echo ""
+    echo -e "${YELLOW}⚠️  检测到非交互式环境 (如 curl | bash)${NC}"
+    echo ""
+    echo "将使用默认安装方式：全局安装"
+    echo "如需项目级安装，请下载脚本后手动运行："
+    echo ""
+    echo "  wget https://raw.githubusercontent.com/Tensionteng/css-oss-skills/main/install-local.sh"
+    echo "  bash install-local.sh"
+    echo ""
+    choice="1"
+fi
 
 case "$choice" in
     1)

@@ -17,18 +17,42 @@ Write-Host ""
 $GlobalDir = Join-Path $env:USERPROFILE ".config\agents\skills"
 $ProjectDir = ".\.agents\skills"
 
-# Interactive selection
-Write-Host "请选择安装方式：" -ForegroundColor $Yellow
-Write-Host ""
-Write-Host "  1) 全局安装 - 所有项目可用"
-Write-Host "     $GlobalDir"
-Write-Host ""
-Write-Host "  2) 项目级安装 - 仅当前项目可用"
-Write-Host "     $ProjectDir"
-Write-Host ""
+# Check if running in interactive mode
+$isInteractive = [Environment]::UserInteractive -and !$env:CI -and !$env:TF_BUILD
 
-$choice = Read-Host "请输入选项 (1 或 2，默认: 1)"
-if ([string]::IsNullOrWhiteSpace($choice)) {
+try {
+    [void][System.Console]::GetCursorPosition()
+    $canReadInput = $true
+} catch {
+    $canReadInput = $false
+}
+
+if ($isInteractive -and $canReadInput) {
+    # Interactive selection
+    Write-Host "请选择安装方式：" -ForegroundColor $Yellow
+    Write-Host ""
+    Write-Host "  1) 全局安装 - 所有项目可用"
+    Write-Host "     $GlobalDir"
+    Write-Host ""
+    Write-Host "  2) 项目级安装 - 仅当前项目可用"
+    Write-Host "     $ProjectDir"
+    Write-Host ""
+
+    $choice = Read-Host "请输入选项 (1 或 2，默认: 1)"
+    if ([string]::IsNullOrWhiteSpace($choice)) {
+        $choice = "1"
+    }
+} else {
+    # Non-interactive mode
+    Write-Host ""
+    Write-Host "⚠️  检测到非交互式环境" -ForegroundColor $Yellow
+    Write-Host ""
+    Write-Host "将使用默认安装方式：全局安装"
+    Write-Host "如需项目级安装，请下载脚本后手动运行："
+    Write-Host ""
+    Write-Host "  iwr https://raw.githubusercontent.com/Tensionteng/css-oss-skills/main/install-local.ps1 -OutFile install.ps1"
+    Write-Host "  .\install.ps1"
+    Write-Host ""
     $choice = "1"
 }
 

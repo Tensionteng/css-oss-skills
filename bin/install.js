@@ -261,6 +261,22 @@ async function performUninstall(targetDir, uninstallType) {
   }
 }
 
+function isInteractive() {
+  // Check if stdin is a TTY (terminal)
+  if (!process.stdin.isTTY) {
+    return false;
+  }
+  // Check if stdout is a TTY
+  if (!process.stdout.isTTY) {
+    return false;
+  }
+  // Check for CI environments
+  if (process.env.CI || process.env.CONTINUOUS_INTEGRATION) {
+    return false;
+  }
+  return true;
+}
+
 function showHelp() {
   log('', 'reset');
   log('🔧 AI Research Writing Skills', 'cyan');
@@ -286,8 +302,19 @@ async function main() {
 
     if (args.includes('uninstall') || args.includes('remove')) {
       await uninstallInteractive();
-    } else {
+    } else if (isInteractive()) {
       await installInteractive();
+    } else {
+      // Non-interactive mode - default to global
+      log('', 'reset');
+      log('🔧 AI Research Writing Skills - 安装', 'cyan');
+      log('=========================================', 'cyan');
+      log('', 'reset');
+      log('⚠️  检测到非交互式环境', 'yellow');
+      log('', 'reset');
+      log('将使用默认安装方式：全局安装', 'reset');
+      log('', 'reset');
+      await performInstall(getGlobalDir(), '全局');
     }
   } catch (error) {
     log(`❌ 错误: ${error.message}`, 'red');
