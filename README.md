@@ -148,7 +148,7 @@ npx github:Tensionteng/css-oss-skills uninstall
 **手动删除**（如需单独删除）：
 ```bash
 # 全局安装位置
-rm -rf ~/.config/agents/skills/*
+rm -rf ~/.claude/skills/*
 
 # 项目级安装位置  
 rm -rf .agents/

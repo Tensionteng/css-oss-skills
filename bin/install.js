@@ -34,7 +34,7 @@ function getSourceDir() {
 
 function getGlobalDir() {
   const home = process.env.HOME || process.env.USERPROFILE;
-  return path.join(home, '.config', 'agents', 'skills');
+  return path.join(home, '.claude', 'skills');
 }
 
 function getProjectDir() {
@@ -168,23 +168,46 @@ async function uninstallInteractive() {
   log('=========================================', 'cyan');
   log('', 'reset');
 
-  if (!globalExists && !projectExists) {
-    log('⚠️  未检测到已安装的 skills', 'yellow');
+  // Check which of our skills are installed
+  const globalSkills = globalExists ? getInstalledSkills(globalDir) : [];
+  const projectSkills = projectExists ? getInstalledSkills(projectDir) : [];
+
+  if (globalSkills.length === 0 && projectSkills.length === 0) {
+    log('⚠️  未检测到已安装的 AI Research Writing skills', 'yellow');
     return;
   }
 
-  log('即将删除以下内容：', 'yellow');
+  // Check for other skills in the directory
+  const globalOtherSkills = globalExists ? getOtherSkills(globalDir) : [];
+
+  log('即将删除以下 AI Research Writing skills：', 'yellow');
   log('', 'reset');
 
-  if (globalExists) {
-    log(`  📁 全局: ${globalDir}`);
+  if (globalSkills.length > 0) {
+    log(`  📁 全局目录: ${globalDir}`);
+    for (const skill of globalSkills) {
+      log(`    - ${skill}`);
+    }
   }
-  if (projectExists) {
-    log(`  📁 项目: ${projectDir}`);
+
+  if (projectSkills.length > 0) {
+    log(`  📁 项目目录: ${projectDir}`);
+    for (const skill of projectSkills) {
+      log(`    - ${skill}`);
+    }
+  }
+
+  // Warn about other skills
+  if (globalOtherSkills.length > 0) {
+    log('', 'reset');
+    log('⚠️  警告：全局目录中还有其他 skills 不会被删除：', 'yellow');
+    for (const skill of globalOtherSkills) {
+      log(`    - ${skill}`);
+    }
   }
 
   log('', 'reset');
-  const confirm = await prompt('确认删除? (yes/no): ');
+  const confirm = await prompt('确认删除以上 skills? (yes/no): ');
 
   if (confirm.toLowerCase() !== 'yes') {
     log('已取消卸载', 'yellow');
@@ -192,34 +215,19 @@ async function uninstallInteractive() {
   }
 
   // Uninstall global
-  if (globalExists) {
+  if (globalSkills.length > 0) {
     log('', 'reset');
     log('🗑️  正在卸载全局 skills...', 'cyan');
-    await performUninstall(globalDir, '全局');
-    // Try to remove parent directories if empty
-    try {
-      const agentsDir = path.dirname(globalDir);
-      const configDir = path.dirname(agentsDir);
-      if (fs.existsSync(globalDir) && fs.readdirSync(globalDir).length === 0) {
-        fs.rmdirSync(globalDir);
-        if (fs.existsSync(agentsDir) && fs.readdirSync(agentsDir).length === 0) {
-          fs.rmdirSync(agentsDir);
-          if (fs.existsSync(configDir) && fs.readdirSync(configDir).length === 0) {
-            fs.rmdirSync(configDir);
-          }
-        }
-      }
-    } catch (e) {
-      // Ignore cleanup errors
-    }
+    await performUninstall(globalDir, globalSkills);
   }
 
   // Uninstall project
-  if (projectExists) {
+  if (projectSkills.length > 0) {
     log('', 'reset');
     log('🗑️  正在卸载项目级 skills...', 'cyan');
-    await performUninstall(projectDir, '项目级');
-    // Try to remove parent directories if empty
+    await performUninstall(projectDir, projectSkills);
+    
+    // Only clean up .agents directory for project-level (it's safe)
     try {
       const agentsDir = path.dirname(projectDir);
       if (fs.existsSync(projectDir) && fs.readdirSync(projectDir).length === 0) {
@@ -235,10 +243,36 @@ async function uninstallInteractive() {
 
   log('', 'reset');
   log('✅ 卸载完成', 'green');
+  if (globalOtherSkills.length > 0) {
+    log('', 'reset');
+    log('💡 其他 skills 仍然保留在目录中', 'cyan');
+  }
   log('', 'reset');
 }
 
-async function performUninstall(targetDir, uninstallType) {
+function getInstalledSkills(dir) {
+  const installed = [];
+  for (const skill of SKILLS) {
+    if (fs.existsSync(path.join(dir, skill))) {
+      installed.push(skill);
+    }
+  }
+  return installed;
+}
+
+function getOtherSkills(dir) {
+  if (!fs.existsSync(dir)) return [];
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  const others = [];
+  for (const entry of entries) {
+    if (entry.isDirectory() && !SKILLS.includes(entry.name)) {
+      others.push(entry.name);
+    }
+  }
+  return others;
+}
+
+async function performUninstall(targetDir, skillsToRemove) {
   if (!fs.existsSync(targetDir)) {
     log(`  ⚠️  目录不存在: ${targetDir}`, 'yellow');
     return;
@@ -247,7 +281,7 @@ async function performUninstall(targetDir, uninstallType) {
   targetDir = path.resolve(targetDir);
   let uninstalled = 0;
 
-  for (const skill of SKILLS) {
+  for (const skill of skillsToRemove) {
     const skillTarget = path.join(targetDir, skill);
     if (fs.existsSync(skillTarget)) {
       fs.rmSync(skillTarget, { recursive: true, force: true });
@@ -257,7 +291,7 @@ async function performUninstall(targetDir, uninstallType) {
   }
 
   if (uninstalled === 0) {
-    log('  未找到已安装的 skills', 'yellow');
+    log('  未找到要删除的 skills', 'yellow');
   }
 }
 

@@ -14,7 +14,7 @@ Write-Host "🔧 AI Research Writing Skills - 安装" -ForegroundColor $Cyan
 Write-Host "=========================================" -ForegroundColor $Cyan
 Write-Host ""
 
-$GlobalDir = Join-Path $env:USERPROFILE ".config\agents\skills"
+$GlobalDir = Join-Path $env:USERPROFILE ".claude\skills"
 $ProjectDir = ".\.agents\skills"
 
 # Check if running in interactive mode

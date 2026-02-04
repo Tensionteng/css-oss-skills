@@ -23,7 +23,7 @@ if [ -z "$HOME_DIR" ]; then
     HOME_DIR="$(getent passwd "$USER" | cut -d: -f6)"
 fi
 
-GLOBAL_DIR="$HOME_DIR/.config/agents/skills"
+GLOBAL_DIR="$HOME_DIR/.claude/skills"
 PROJECT_DIR="./.agents/skills"
 
 # Check if running in interactive mode
