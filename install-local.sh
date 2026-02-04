@@ -28,35 +28,95 @@ fi
 GLOBAL_DIR="$HOME_DIR/.config/agents/skills"
 PROJECT_DIR="./.agents/skills"
 
-# Interactive selection
-echo -e "${YELLOW}请选择安装方式：${NC}"
-echo ""
-echo "  1) 全局安装 (所有项目可用)"
-echo "     位置: $GLOBAL_DIR"
-echo ""
-echo "  2) 项目级安装 (仅当前项目可用，可随代码提交)"
-echo "     位置: $PROJECT_DIR"
-echo ""
+# Parse command line arguments
+INSTALL_MODE=""
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --global|-g)
+            INSTALL_MODE="global"
+            shift
+            ;;
+        --project|-p)
+            INSTALL_MODE="project"
+            shift
+            ;;
+        --help|-h)
+            echo "用法: $0 [选项]"
+            echo ""
+            echo "选项:"
+            echo "  --global, -g    全局安装 (所有项目可用)"
+            echo "  --project, -p   项目级安装 (仅当前项目可用)"
+            echo "  --help, -h      显示此帮助信息"
+            echo ""
+            echo "不带参数时，交互式选择安装方式"
+            exit 0
+            ;;
+        *)
+            echo -e "${YELLOW}未知选项: $1${NC}"
+            shift
+            ;;
+    esac
+done
 
-# Default to option 1 if no input
-read -p "请输入选项 (1 或 2，默认: 1): " choice
-choice=${choice:-1}
+# Check if running in non-interactive mode (pipe, CI, etc.)
+is_interactive() {
+    # Check if stdin is a terminal
+    if [ ! -t 0 ]; then
+        return 1
+    fi
+    # Check for CI environment
+    if [ -n "$CI" ] || [ -n "$CONTINUOUS_INTEGRATION" ]; then
+        return 1
+    fi
+    return 0
+}
 
-case "$choice" in
-    1)
+# Determine installation mode
+if [ -n "$INSTALL_MODE" ]; then
+    # Command line argument provided
+    if [ "$INSTALL_MODE" = "global" ]; then
         TARGET_DIR="$GLOBAL_DIR"
         INSTALL_TYPE="全局"
-        ;;
-    2)
+    else
         TARGET_DIR="$PROJECT_DIR"
         INSTALL_TYPE="项目级"
-        ;;
-    *)
-        echo -e "${RED}❌ 无效选项，使用默认全局安装${NC}"
-        TARGET_DIR="$GLOBAL_DIR"
-        INSTALL_TYPE="全局"
-        ;;
-esac
+    fi
+elif ! is_interactive; then
+    # Non-interactive mode - default to global
+    echo -e "${YELLOW}检测到非交互式环境，使用默认全局安装${NC}"
+    TARGET_DIR="$GLOBAL_DIR"
+    INSTALL_TYPE="全局"
+else
+    # Interactive selection
+    echo -e "${YELLOW}请选择安装方式：${NC}"
+    echo ""
+    echo "  1) 全局安装 (所有项目可用)"
+    echo "     位置: $GLOBAL_DIR"
+    echo ""
+    echo "  2) 项目级安装 (仅当前项目可用，可随代码提交)"
+    echo "     位置: $PROJECT_DIR"
+    echo ""
+
+    # Default to option 1 if no input
+    read -p "请输入选项 (1 或 2，默认: 1): " choice
+    choice=${choice:-1}
+
+    case "$choice" in
+        1)
+            TARGET_DIR="$GLOBAL_DIR"
+            INSTALL_TYPE="全局"
+            ;;
+        2)
+            TARGET_DIR="$PROJECT_DIR"
+            INSTALL_TYPE="项目级"
+            ;;
+        *)
+            echo -e "${RED}❌ 无效选项，使用默认全局安装${NC}"
+            TARGET_DIR="$GLOBAL_DIR"
+            INSTALL_TYPE="全局"
+            ;;
+    esac
+fi
 
 echo ""
 echo -e "${CYAN}安装类型: $INSTALL_TYPE${NC}"

@@ -175,11 +175,29 @@ function promptInstallType() {
   });
 }
 
+function isInteractive() {
+  // Check if stdin is a TTY (terminal)
+  if (!process.stdin.isTTY) {
+    return false;
+  }
+  // Check for CI environments
+  if (process.env.CI || process.env.CONTINUOUS_INTEGRATION) {
+    return false;
+  }
+  // Check if running via npx/npm install (npm sets these)
+  if (process.env.npm_config_global || process.env.INIT_CWD) {
+    // We're being run as an npm script, check if stdin is still available
+    if (!process.stdin.isTTY) {
+      return false;
+    }
+  }
+  return true;
+}
+
 async function main() {
   try {
-    // Check if running in non-interactive mode (CI/automated)
-    const isCI = process.env.CI || process.env.NODE_ENV === 'production';
     const hasArgs = process.argv.length > 2;
+    const interactive = isInteractive();
 
     let targetDir;
     let installType;
@@ -197,13 +215,32 @@ async function main() {
         targetDir = path.join(process.cwd(), '.agents', 'skills');
         installType = '项目级';
       } else {
-        // Default to interactive mode
-        const result = await promptInstallType();
-        targetDir = result.targetDir;
-        installType = result.installType;
+        // Has args but no recognized flags - show help and default to global
+        log('', 'reset');
+        log('🔧 AI Research Writing Skills - 安装脚本', 'cyan');
+        log('=========================================', 'cyan');
+        log('', 'reset');
+        log('用法: npx github:Tensionteng/css-oss-skills [选项]', 'yellow');
+        log('', 'reset');
+        log('选项:', 'cyan');
+        log('  --global, -g    全局安装 (默认，所有项目可用)');
+        log('  --project, -p   项目级安装 (仅当前项目可用)');
+        log('', 'reset');
+        log('非交互式环境自动使用全局安装', 'yellow');
+        log('', 'reset');
+        
+        targetDir = getGlobalDir();
+        installType = '全局';
       }
-    } else if (isCI) {
-      // Default to global in CI
+    } else if (!interactive) {
+      // Non-interactive mode (npx, CI, pipe) - default to global
+      log('', 'reset');
+      log('🔧 AI Research Writing Skills - 安装脚本', 'cyan');
+      log('=========================================', 'cyan');
+      log('', 'reset');
+      log('检测到非交互式环境，使用默认全局安装', 'yellow');
+      log('', 'reset');
+      
       targetDir = getGlobalDir();
       installType = '全局';
     } else {

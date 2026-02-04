@@ -130,13 +130,18 @@ npx github:Tensionteng/css-oss-skills --project
 **Linux / macOS：**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Tensionteng/css-oss-skills/main/install-local.sh | bash
+# 全局安装（推荐，所有项目可用）
+curl -fsSL https://raw.githubusercontent.com/Tensionteng/css-oss-skills/main/install-local.sh | bash -s -- --global
+
+# 项目级安装
+bash install-local.sh --project
 ```
 
 或下载后运行：
 ```bash
 wget https://raw.githubusercontent.com/Tensionteng/css-oss-skills/main/install-local.sh
-bash install-local.sh
+bash install-local.sh --global   # 全局安装
+bash install-local.sh --project  # 项目级安装
 ```
 
 **Windows：**
