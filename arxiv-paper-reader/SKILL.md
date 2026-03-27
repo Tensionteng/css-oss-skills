@@ -1,11 +1,11 @@
 ---
 name: arxiv-paper-reader
 description: 自动下载 arXiv 论文 LaTeX 源码，分析内容并生成中文 Markdown 阅读报告。支持批量处理、自动去重、图片提取和索引维护。
-version: 1.0.0
-author: AI Research Assistant
 license: MIT
-tags: [ArXiv, Paper Reading, LaTeX, Literature Review, Chinese]
-dependencies: [requests>=2.28.0, pymupdf>=1.23.0]
+metadata:
+  author: tengshiyuan
+  tags: [ArXiv, Paper Reading, LaTeX, Literature Review, Chinese]
+  dependencies: [requests>=2.28.0, pymupdf>=1.23.0]
 ---
 
 # arXiv 论文阅读器

@@ -1,8 +1,10 @@
 ---
 name: research-brainstorming
 description: Guide researchers through structured brainstorming to transform vague ideas into viable angles. Maintains .research/IDEA.md as shared documentation.
-tags: [Research, Brainstorming, Idea Validation, Academic Writing]
-dependencies: [arxiv, semanticscholar]
+metadata:
+  author: tengshiyuan
+  tags: [Research, Brainstorming, Idea Validation, Academic Writing]
+  dependencies: [arxiv, semanticscholar]
 ---
 
 # Research Brainstorming

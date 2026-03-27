@@ -1,8 +1,10 @@
 ---
 name: peer-review
 description: Simulate a critical peer reviewer with "reject by default" mindset to identify fatal flaws before submission. Uses three dimensions: originality, soundness, consistency.
-tags: [Peer Review, Paper Review, Revision, Quality Check]
-dependencies: [pymupdf]
+metadata:
+  author: tengshiyuan
+  tags: [Peer Review, Paper Review, Revision, Quality Check]
+  dependencies: [pymupdf]
 ---
 
 # Peer Review

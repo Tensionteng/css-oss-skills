@@ -1,8 +1,10 @@
 ---
 name: manuscript-writing
 description: Write publication-ready ML/AI papers. Draft papers from research repos, structure arguments, verify citations. Includes LaTeX templates and conference guidelines.
-tags: [Academic Writing, Paper Writing, LaTeX, Citations]
-dependencies: [semanticscholar, arxiv]
+metadata:
+  author: tengshiyuan
+  tags: [Academic Writing, Paper Writing, LaTeX, Citations]
+  dependencies: [semanticscholar, arxiv]
 ---
 
 # ML Paper Writing for Top AI Conferences

@@ -1,8 +1,10 @@
 ---
 name: research-execution
 description: Execute research experiments through progressive pilot studies. Design experiments, run pilots at increasing scales, and analyze results. Maintains .research/EXPERIMENT.md.
-tags: [Research, Experiments, Pilot Studies, Baseline Analysis, Evaluation]
-dependencies: [pymupdf, semanticscholar]
+metadata:
+  author: tengshiyuan
+  tags: [Research, Experiments, Pilot Studies, Baseline Analysis, Evaluation]
+  dependencies: [pymupdf, semanticscholar]
 ---
 
 # Research Execution

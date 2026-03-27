@@ -1,8 +1,10 @@
 ---
 name: pdf-reader
 description: Convert PDF papers to images for AI analysis. Extract figures, tables, formulas, and text layout.
-tags: [PDF, Papers, Literature Review, Figures]
-dependencies: [pymupdf]
+metadata:
+  author: tengshiyuan
+  tags: [PDF, Papers, Literature Review, Figures]
+  dependencies: [pymupdf]
 ---
 
 # PDF Reader
